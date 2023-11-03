@@ -1,0 +1,166 @@
+{
+  "name": "rabbitmq_unacknowledged_messages_incident",
+  "description": "This incident type involves a high number of unacknowledged messages in RabbitMQ queues. RabbitMQ is a message broker that is utilized to handle the communication between software applications. When a message is sent to RabbitMQ queue, it is expected to be acknowledged by the recipient. However, if the message remains unacknowledged for a long time, it can cause the number of unacknowledged messages in the queue to increase significantly. This can lead to performance issues and impact the overall functionality of the software system.",
+  "params": [
+    {
+      "name": "DEAD_LETTER_QUEUE_NAME",
+      "value": ""
+    },
+    {
+      "name": "RABBITMQ_QUEUE_NAME",
+      "value": ""
+    },
+    {
+      "name": "QUEUE_NAME",
+      "value": ""
+    },
+    {
+      "name": "NEW_QUEUE_SIZE",
+      "value": ""
+    },
+    {
+      "name": "ACK_TIME_LIMIT",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## RabbitMQ Unacknowledged Messages Incident\nThis incident type involves a high number of unacknowledged messages in RabbitMQ queues. RabbitMQ is a message broker that is utilized to handle the communication between software applications. When a message is sent to RabbitMQ queue, it is expected to be acknowledged by the recipient. However, if the message remains unacknowledged for a long time, it can cause the number of unacknowledged messages in the queue to increase significantly. This can lead to performance issues and impact the overall functionality of the software system."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ server status"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo systemctl status rabbitmq-server`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ server logs"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo journalctl -u rabbitmq-server --no-pager`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ queues status"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_queues`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ queues with high number of unacknowledged messages"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_queues name messages_unacknowledged`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ connections status"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_connections`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ channels status"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_channels`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ consumers status"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_consumers`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check RabbitMQ message rate"
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `sudo rabbitmqctl list_queues name messages message_stats.publish_details.rate`"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the RabbitMQ queue size to accommodate the high number of unacknowledged messages temporarily."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_change_queue_size($RABBITMQ_QUEUE_NAME, $QUEUE_NAME, $NEW_QUEUE_SIZE)"
+    },
+    {
+      "name": "cell_20",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Configure RabbitMQ to automatically move unacknowledged messages to a dead-letter queue after a specified period for later reprocessing."
+    },
+    {
+      "name": "cell_21",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_rabbitmq_configure_dead_letter_queue_ttl($DEAD_LETTER_QUEUE_NAME, $QUEUE_NAME, $ACK_TIME_LIMIT)"
+    }
+  ]
+}
